@@ -11,7 +11,8 @@ export default class App extends React.Component {
     super(props);
     AsyncStorage.clear();
     this.state = {
-      filePath: {}
+      filePath: {},
+      counter: 0
     };
   }
   componentDidMount(){
@@ -44,9 +45,13 @@ export default class App extends React.Component {
         alert(response.customButton);
       } else {
         let source = response;
-        AsyncStorage.setItem("profilePic"+Math.random(), JSON.stringify(source));
+        let counter = this.state.counter;
+        AsyncStorage.setItem(""+
+        counter, JSON.stringify(source));
+        counter++;
         this.setState({
-          filePath: source
+          filePath: source,
+          counter: counter
         });
       }
     });
@@ -54,34 +59,36 @@ export default class App extends React.Component {
 
 
 
-  getImages =  () => {
+  getImages =  async () => {
     let self = this;
     try{
-      AsyncStorage.getAllKeys((err, keys) => {
-        AsyncStorage.multiGet(keys, async (err, stores) => {
-          imgView = await stores.map((result, i, store) => {
-            return  <View key={store[i][0]} style={{flexDirection:"row"}}>
-          <Lightbox underlayColor="white">
-              <Image
-                source={{
-                  uri: 'data:image/jpeg;base64,' + JSON.parse(store[i][1]).data,
-                }}
-                resizeMode="contain"
-                style={{ width: 100, height: 100,justifyContent: 'flex-start' }}
-              />
-            </Lightbox>
-             <Button title="Delete" style={{justifyContent: 'flex-end'}} onPress={()=>{console.log(store[i][0]);
-               AsyncStorage.removeItem(store[i][0],(err)=> console.log(err))}}/>
-            </View>
-          });
-          this.setState({
-            isAvail: true,
-            imgView: imgView
-          });
-        });
+      let keys = await AsyncStorage.getAllKeys();
+      let stores =  await AsyncStorage.multiGet(keys);
+      stores = stores.sort((a,b) => a[0] - b[0]);
+      let imgView = await stores.map((store) => {
+        return  <View key={store[0]} style={{flexDirection:"row"}}>
+      <Lightbox underlayColor="white">
+          <Image
+            source={{
+              uri: 'data:image/jpeg;base64,' + JSON.parse(store[1]).data,
+            }}
+            resizeMode="contain"
+            style={{ width: 100, height: 100,justifyContent: 'flex-start' }}
+          />
+        </Lightbox>
+        <Text style={{ alignItems: 'center',justifyContent: 'flex-end'}}>
+        {store[0]}
+        </Text>
+         <Button title="Delete" style={{justifyContent: 'flex-end'}} onPress={()=>{
+           AsyncStorage.removeItem(store[0],(err,result)=> {this.setState({ state: this.state });})}}/>
+        </View>
       });
+      this.setState({
+        isAvail: true,
+        imgView: imgView
+      });
+
     } catch(e){
-      console.log("%%%%%%%%")
       console.log(e);
     }
   }
@@ -89,7 +96,9 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.container}>
+        <Button title="Choose File" style={styles.chooseButton} onPress={this.chooseFile.bind(this)} />
+      <View style={{height: 580}} >
         <ScrollView contentContainerStyle={styles.container}>
           {/*<Image
             source={{
@@ -98,9 +107,9 @@ export default class App extends React.Component {
             style={{ width: 100, height: 100 }}
           />*/}
         {this.state.isAvail && this.state.imgView.map((mView) => mView)}
-          <Button title="Choose File" onPress={this.chooseFile.bind(this)} />
         </ScrollView>
-      </ScrollView>
+      </View>
+      </View>
     );
   }
 }
@@ -112,8 +121,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  mainContainer: {
-    alignItems: 'center',
-    justifyContent: 'center'
+  chooseButton: {
+    marginTop: '25%',
   }
 });
