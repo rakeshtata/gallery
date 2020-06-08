@@ -10,8 +10,8 @@ const options = {
   keyPrefix: "uploads/",
   bucket: "image-picker-test",
   region: "us-west-1",
-  accessKey: "AKIAJTG7TY4IWKS7CVAQ",
-  secretKey: "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",
+  accessKey: "",
+  secretKey: "",
   successActionStatus: 201
 }
 
