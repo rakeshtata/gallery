@@ -3,7 +3,17 @@ import React from 'react';
 import { StyleSheet, Text, View,ScrollView , Button, Image, AsyncStorage } from 'react-native';
 import ImagePicker from 'react-native-image-picker';
 import Lightbox from 'react-native-lightbox';
+import { RNS3 } from 'react-native-s3-upload';
 /*import {AsyncStorage} from '@react-native-community/async-storage'*/
+
+const options = {
+  keyPrefix: "uploads/",
+  bucket: "image-picker-test",
+  region: "us-west-1",
+  accessKey: "AKIAJTG7TY4IWKS7CVAQ",
+  secretKey: "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",
+  successActionStatus: 201
+}
 
 export default class App extends React.Component {
 
@@ -65,7 +75,7 @@ export default class App extends React.Component {
       let keys = await AsyncStorage.getAllKeys();
       let stores =  await AsyncStorage.multiGet(keys);
       stores = stores.sort((a,b) => a[0] - b[0]);
-      let imgView = await stores.map((store) => {
+      let imgView = await stores.map((store,i) => {
         return  <View key={store[0]} style={{flexDirection:"row"}}>
       <Lightbox underlayColor="white">
           <Image
@@ -77,10 +87,22 @@ export default class App extends React.Component {
           />
         </Lightbox>
         <Text style={{ alignItems: 'center',justifyContent: 'flex-end'}}>
-        {store[0]}
+        {`Step - ${i+1}`}
         </Text>
          <Button title="Delete" style={{justifyContent: 'flex-end'}} onPress={()=>{
            AsyncStorage.removeItem(store[0],(err,result)=> {this.setState({ state: this.state });})}}/>
+           <Button title="Upload" style={{justifyContent: 'flex-end'}} onPress={()=>{
+             const file = {
+                // `uri` can also be a file system path (i.e. file://)
+                uri: 'data:image/jpeg;base64,' + JSON.parse(store[1]).data,
+                name: `image${store[0]}.png`,
+                type: "image/png"
+              }
+             RNS3.put(file, options).then(response => {
+              if (response.status !== 201)
+                throw new Error("Failed to upload image to S3");
+              console.log(response.body);
+            });}}/>
         </View>
       });
       this.setState({
@@ -97,7 +119,7 @@ export default class App extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-        <Button title="Choose File" style={styles.chooseButton} onPress={this.chooseFile.bind(this)} />
+        <Button title="Add a Step" style={styles.chooseButton} onPress={this.chooseFile.bind(this)} />
       <View style={{height: 580}} >
         <ScrollView contentContainerStyle={styles.container}>
           {/*<Image
@@ -117,7 +139,7 @@ export default class App extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#AFEEEE',
     alignItems: 'center',
     justifyContent: 'center',
   },
