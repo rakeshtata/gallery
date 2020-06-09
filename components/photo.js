@@ -1,16 +1,8 @@
 import React,{ useState } from 'react';
 import { Text, View , Button, Image, AsyncStorage } from 'react-native';
 import Lightbox from 'react-native-lightbox';
-import { RNS3 } from 'react-native-s3-upload';
+import PutImageToS3 from '../service/s3Api';
 
-const options = {
-  keyPrefix: "uploads/",
-  bucket: "image-picker-test",
-  region: "us-west-1",
-  accessKey: "",
-  secretKey: "",
-  successActionStatus: 201
-}
 const Photo = ({ store,i }) => {
   const [, setTick] = useState(0);
     return (
@@ -29,18 +21,7 @@ const Photo = ({ store,i }) => {
             </Text>
              <Button title="Delete" style={{justifyContent: 'flex-end'}} onPress={()=>{
                AsyncStorage.removeItem(store[0],(err,result)=> {setTick(tick => tick + 1)})}}/>
-               <Button title="Upload" style={{justifyContent: 'flex-end'}} onPress={()=>{
-                 const file = {
-                    // `uri` can also be a file system path (i.e. file://)
-                    uri: JSON.parse(store[1]).uri,
-                    name: `image${store[0]}.png`,
-                    type: "image/png"
-                  }
-                 RNS3.put(file, options).then(response => {
-                  if (response.status !== 201)
-                    throw new Error("Failed to upload image to S3");
-                  console.log(response.body);
-                });}}/>
+               <Button title="Upload" style={{justifyContent: 'flex-end'}} onPress={()=>PutImageToS3(store)}/>
             </View>
           )
 

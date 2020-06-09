@@ -6,6 +6,7 @@ import Lightbox from 'react-native-lightbox';
 import { RNS3 } from 'react-native-s3-upload';
 import Styles from './style';
 import Photo from './components/photo';
+import ChooseOptions from './common/chooseOptions';
 /*import {AsyncStorage} from '@react-native-community/async-storage'*/
 
 
@@ -14,12 +15,12 @@ export default class App extends React.Component {
 
   constructor(props) {
     super(props);
-    //AsyncStorage.clear();
+    AsyncStorage.clear();
     this.state = {
       filePath: {},
       counter: 0
     };
-    this.getImages();
+    //this.getImages();
   }
 
   componentDidUpdate(){
@@ -38,30 +39,7 @@ export default class App extends React.Component {
         path: 'images',
       },
     };
-    ImagePicker.showImagePicker(options,async (response) => {
-
-
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.error) {
-        console.log('ImagePicker Error: ', response.error);
-      } else if (response.customButton) {
-        console.log('User tapped custom button: ', response.customButton);
-        alert(response.customButton);
-      } else {
-        let source = response;
-        let counter = this.state.counter;
-      //  let lastCounter =  await AsyncStorage.getItem("lastCounter");
-      //  counter = lastCounter ? parseInt(lastCounter): counter;
-        AsyncStorage.setItem(""+
-        counter, JSON.stringify(source));
-        counter++;
-        this.setState({
-          filePath: source,
-          counter: counter
-        });
-      }
-    });
+    ImagePicker.showImagePicker(options, response => ChooseOptions(response,this));
   };
 
 
